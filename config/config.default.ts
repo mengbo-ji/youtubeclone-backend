@@ -16,6 +16,23 @@ export default (appInfo: EggAppInfo) => {
   };
 
   // the return config will combines to EggAppConfig
+
+  config.mongoose = {
+    client: {
+      url: 'mongodb://127.0.0.1/youtobe-clone',
+      options: {
+        useUnifiedTopology: true,
+      },
+      // mongoose global plugins, expected a function or an array of function and options
+    },
+  };
+
+  config.security = {
+    csrf: {
+      enable: false,
+    },
+  };
+
   return {
     ...config,
     ...bizConfig,
