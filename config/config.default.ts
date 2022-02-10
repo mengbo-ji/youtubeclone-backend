@@ -8,7 +8,7 @@ export default (appInfo: EggAppInfo) => {
   config.keys = appInfo.name + '_1644398444188_324';
 
   // add your egg config in here
-  config.middleware = [];
+  config.middleware = [ 'errorHandler' ];
 
   // add your special config in here
   const bizConfig = {
@@ -31,6 +31,11 @@ export default (appInfo: EggAppInfo) => {
     csrf: {
       enable: false,
     },
+  };
+
+  config.jwt = {
+    secret: '1f537ec7-463c-430f-bdad-e8da749ec7ba',
+    expiresIn: '1d',
   };
 
   return {
