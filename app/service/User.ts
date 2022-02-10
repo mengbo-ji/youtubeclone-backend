@@ -68,8 +68,8 @@ export default class User extends Service {
 
   /**
    * subscribe
-   * @param userId
-   * @param channelId
+   * @param userId - userId
+   * @param channelId - channelId
   */
   public async subscribe(userId, channelId) {
     const { Subscription, User } = this.app.model;
