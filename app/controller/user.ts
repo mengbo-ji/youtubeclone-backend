@@ -140,4 +140,24 @@ export default class UserController extends Controller {
       },
     };
   }
+
+  public async subscribe() {
+    const { ctx, service } = this;
+    const userId = ctx.user._id;
+    const channelId = ctx.params.userId;
+    // 1. 用户不能自己订阅自己
+    if (userId.equals(channelId)) {
+      ctx.throw(422, '用户不能订阅自己');
+    }
+
+    // 2. 添加订阅
+    const user = await service.user.subscribe(userId, channelId);
+    // 3. 发送响应
+    ctx.body = {
+      user: {
+        ...user.toJSON(),
+        isSubscribed: true,
+      },
+    };
+  }
 }

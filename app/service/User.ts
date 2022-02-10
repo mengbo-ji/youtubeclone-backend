@@ -65,4 +65,32 @@ export default class User extends Service {
   public verifyToken(token) {
     return jwt.verify(token, this.app.config.jwt.secret);
   }
+
+  /**
+   * subscribe
+   * @param userId
+   * @param channelId
+  */
+  public async subscribe(userId, channelId) {
+    const { Subscription, User } = this.app.model;
+    // 1. 检查是否已经订阅过
+    const user = await User.findById(channelId);
+    const record = await Subscription.findOne({
+      user: userId,
+      channel: channelId,
+    });
+    // 2. 没有订阅，添加订阅
+    if (!record) {
+      await new Subscription({
+        user: userId,
+        channel: channelId,
+      }).save();
+      // 更新订阅数量
+      user.subscribersCount++;
+      await user.save();
+    }
+    // 3. 返回用户信息
+    return user;
+  }
+
 }
