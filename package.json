@@ -57,6 +57,9 @@
   "eslintIgnore": [
     "coverage"
   ],
+  "git-pre-hooks": {
+    "pre-commit": "npm run lint && npm run tsc"
+  },
   "author": "",
   "license": "MIT"
 }
