@@ -20,6 +20,8 @@ export default class UserController extends Controller {
       ctx.throw(422, '邮箱已存在');
     }
 
+    body.password = this.ctx.helper.md5(body.password);
+
     // 2. 保存用户
     const user = await userService.createUser(body);
 
@@ -36,6 +38,54 @@ export default class UserController extends Controller {
         channelDescription: user.channelDescription,
         avatar: user.avatar,
         token,
+      },
+    };
+  }
+
+  public async update() {
+    const { ctx, service } = this;
+    const body = ctx.request.body;
+    const userService = service.user;
+
+    // 1. 数据校验
+    ctx.validate({
+      username: { type: 'string', required: false },
+      email: { type: 'email', required: false },
+      password: { type: 'string', required: false },
+      channelDescription: { type: 'string', required: false },
+      avatar: { type: 'string', required: false },
+    }, body);
+
+    // 2. 校验邮箱是否存在
+    if (body.email) {
+      if (body.email !== ctx.user.email && await userService.findByEmail(body.email)) {
+        ctx.throw(422, '邮箱已存在');
+      }
+    }
+
+    // 3. 校验用户是否存在
+    if (body.username) {
+      if (body.username !== ctx.user.username && !await userService.findByUsername(body.username)) {
+        ctx.throw(422, '用户已存在');
+      }
+    }
+
+    // 4. 校验密码
+    if (body.password) {
+      body.password = ctx.helper.md5(body.password);
+    }
+
+    // 5. 更新用户信息
+    const user = await userService.updateUser(body);
+
+    // 6. 返回更新后的用户信息
+    ctx.body = {
+      user: {
+        email: user.email,
+        username: user.username,
+        channelDescription: user.channelDescription,
+        avatar: user.avatar,
+        token: this.ctx.headers.authorization,
       },
     };
   }

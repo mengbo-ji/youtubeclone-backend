@@ -2,7 +2,7 @@ import { Service } from 'egg';
 import * as jwt from 'jsonwebtoken';
 
 /**
- * User Service
+ * user Service
  */
 export default class User extends Service {
   get User() {
@@ -33,10 +33,19 @@ export default class User extends Service {
    * @param data - object
   */
   public async createUser(data: Record<string, string>) {
-    data.password = this.ctx.helper.md5(data.password);
     const user = new this.User(data);
     await user.save();
     return user;
+  }
+
+  /**
+   * updateUser user
+   * @param data - object
+  */
+  public updateUser(data) {
+    return this.User.findByIdAndUpdate(this.ctx.user._id, data, {
+      new: true, // 返回更新之后的数据
+    });
   }
 
   /**

@@ -5,6 +5,7 @@ export default (app: Application) => {
 
   router.prefix('/api/v1'); // 基础路径
   router.post('/user/create', controller.user.create);
+  router.post('/user/update', middleware.auth(), controller.user.update);
   router.post('/user/login', controller.user.login);
   router.get('/user/current', middleware.auth(), controller.user.getCurrentUser);
 };
