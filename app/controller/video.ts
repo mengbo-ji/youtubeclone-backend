@@ -12,8 +12,7 @@ export default class VideoController extends Controller {
       cover: { type: 'string' },
     });
     body.user = this.ctx.user._id;
-    const video = new Video(body).save();
-
+    const video = await new Video(body).save();
     this.ctx.state = 201;
     this.ctx.body = {
       video,
