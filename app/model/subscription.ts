@@ -1,17 +1,17 @@
 import { Application } from 'egg';
 
 export default (app: Application) => {
-  const mongoose = app.mongoose as any;
+  const mongoose = app.mongoose;
   const Schema = mongoose.Schema;
 
   const subscriptionSchema = new Schema({
     user: { // 订阅用户
-      type: mongoose.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
     channel: { // 订阅频道
-      type: mongoose.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },

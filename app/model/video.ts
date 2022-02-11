@@ -1,7 +1,7 @@
 import { Application } from 'egg';
 
 export default (app: Application) => {
-  const mongoose = app.mongoose as any;
+  const mongoose = app.mongoose;
   const Schema = mongoose.Schema;
 
   const videoSchema = new Schema({
@@ -22,7 +22,7 @@ export default (app: Application) => {
       required: true,
     },
     user: {
-      type: mongoose.ObjectId, // 视频作者
+      type: Schema.Types.ObjectId, // 视频作者
       required: true,
       ref: 'User',
     },

@@ -33,10 +33,12 @@ export default class UserController extends Controller {
     // 4. 发送响应
     ctx.body = {
       user: {
-        email: user.email,
-        username: user.username,
-        channelDescription: user.channelDescription,
-        avatar: user.avatar,
+        ...ctx.helper._.pick(user, [
+          'username',
+          'email',
+          'channelDescription',
+          'avatar',
+        ]),
         token,
       },
     };
@@ -81,10 +83,12 @@ export default class UserController extends Controller {
     // 6. 返回更新后的用户信息
     ctx.body = {
       user: {
-        email: user.email,
-        username: user.username,
-        channelDescription: user.channelDescription,
-        avatar: user.avatar,
+        ...ctx.helper._.pick(user, [
+          'username',
+          'email',
+          'channelDescription',
+          'avatar',
+        ]),
         token: this.ctx.headers.authorization,
       },
     };
@@ -119,23 +123,28 @@ export default class UserController extends Controller {
     // 5. 响应数据
     ctx.body = {
       user: {
-        email: user.email,
-        username: user.username,
-        channelDescription: user.channelDescription,
-        avatar: user.avatar,
+        ...ctx.helper._.pick(user, [
+          'username',
+          'email',
+          'channelDescription',
+          'avatar',
+        ]),
         token,
       },
     };
   }
 
   public async getCurrentUser() {
-    const user = this.ctx.user;
-    this.ctx.body = {
+    const { ctx } = this;
+    const user = ctx.user;
+    ctx.body = {
       user: {
-        email: user.email,
-        username: user.username,
-        channelDescription: user.channelDescription,
-        avatar: user.avatar,
+        ...ctx.helper._.pick(user, [
+          'username',
+          'email',
+          'channelDescription',
+          'avatar',
+        ]),
         token: this.ctx.headers.authorization,
       },
     };
@@ -155,9 +164,90 @@ export default class UserController extends Controller {
     // 3. 发送响应
     ctx.body = {
       user: {
-        ...user.toJSON(),
+        ...ctx.helper._.pick(user, [
+          'username',
+          'email',
+          'channelDescription',
+          'avatar',
+          'subscribersCount',
+        ]),
         isSubscribed: true,
       },
     };
   }
+
+  public async unsubscribe() {
+    const { ctx, service } = this;
+    const userId = ctx.user._id;
+    const channelId = ctx.params.userId;
+    // 1. 用户不能自己订阅自己
+    if (userId.equals(channelId)) {
+      ctx.throw(422, '用户不能订阅自己');
+    }
+
+    // 2. 取消订阅
+    const user = await service.user.unsubscribe(userId, channelId);
+    // 3. 发送响应
+    ctx.body = {
+      user: {
+        ...ctx.helper._.pick(user, [
+          'username',
+          'email',
+          'channelDescription',
+          'avatar',
+          'subscribersCount',
+        ]),
+        isSubscribed: false,
+      },
+    };
+  }
+
+  public async getUserInfo() {
+    const { ctx, app } = this;
+    // 1. 获取用户状态
+    let isSubscribed = false;
+    if (ctx.user) {
+      // 获取订阅记录
+      const record = await app.model.Subscription.findOne({
+        user: ctx.user._id,
+        channel: ctx.params.userId,
+      });
+      if (record) {
+        isSubscribed = true;
+      }
+    }
+    // 2. 获取用户信息
+    const user = await app.model.User.findById(ctx.params.userId);
+    // 3. 发送响应
+    ctx.body = {
+      user: {
+        ...ctx.helper._.pick(user, [
+          'username',
+          'email',
+          'channelDescription',
+          'avatar',
+          'cover',
+          'subscribersCount',
+        ]),
+        isSubscribed,
+      },
+    };
+  }
+
+  public async getUserSubscribeList() {
+    const Subscription = this.app.model.Subscription;
+    let subscriptions = await Subscription.find({
+      user: this.ctx.params.userId,
+    }).populate('channel');
+
+    subscriptions = subscriptions.map(item => {
+      return this.ctx.helper._.pick(item.channel, [
+        '_id',
+        'username',
+        'avatar',
+      ]);
+    });
+    this.ctx.body = subscriptions;
+  }
+
 }

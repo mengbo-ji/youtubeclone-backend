@@ -1,5 +1,5 @@
 import { Service } from 'egg';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 /**
  * user Service
@@ -87,6 +87,30 @@ export default class User extends Service {
       }).save();
       // 更新订阅数量
       user.subscribersCount++;
+      await user.save();
+    }
+    // 3. 返回用户信息
+    return user;
+  }
+
+  /**
+   * unsubscribe
+   * @param userId - userId
+   * @param channelId - channelId
+  */
+  public async unsubscribe(userId, channelId) {
+    const { Subscription, User } = this.app.model;
+    // 1. 检查是否已经订阅过
+    const user = await User.findById(channelId);
+    const record = await Subscription.findOne({
+      user: userId,
+      channel: channelId,
+    });
+    // 2. 订阅了，删除
+    if (record) {
+      await record.remove();
+      // 更新订阅数量
+      user.subscribersCount--;
       await user.save();
     }
     // 3. 返回用户信息

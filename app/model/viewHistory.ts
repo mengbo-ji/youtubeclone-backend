@@ -1,17 +1,17 @@
 import { Application } from 'egg';
 
 export default (app: Application) => {
-  const mongoose = app.mongoose as any;
+  const mongoose = app.mongoose;
   const Schema = mongoose.Schema;
 
   const viewHistorySchema = new Schema({
     user: { // 用户
-      type: mongoose.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
     video: { // 视频
-      type: mongoose.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'Video',
       required: true,
     },
