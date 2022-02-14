@@ -181,8 +181,220 @@ export default class VideoController extends Controller {
     this.ctx.body = {
       video,
     };
+  }
 
+  public async createVideoComment() {
+    const body = this.ctx.request.body;
+    const { Video, VideoComment } = this.app.model;
+    const { videoId } = this.ctx.params;
 
+    this.ctx.validate({
+      comment: 'string',
+    }, body);
+
+    // 获取评论所属视频
+    const video = await Video.findById(videoId);
+    if (!video) {
+      this.ctx.throw(404);
+    }
+
+    // 创建评论
+    const comment = await new VideoComment({
+      content: body.comment,
+      user: this.ctx.user._id,
+      video: videoId,
+    }).save();
+
+    video.commentsCount = await VideoComment.countDocuments({
+      video: videoId,
+    });
+
+    await video.save();
+
+    // 映射评论所属用户和视频字段
+    await comment.populate('user').populate('video').execPopulate();
+
+    this.ctx.body = { comment };
+  }
+
+  public async deleteVideoComment() {
+    const { Video, VideoComment } = this.app.model;
+    const { videoId, commentId } = this.ctx.params;
+
+    const video = await Video.findById(videoId);
+    // 校验视频是否存在
+    if (!video) {
+      this.ctx.throw(404, 'Video Not Found');
+    }
+
+    const comment = await VideoComment.findById(commentId);
+    // 校验评论是否存在
+    if (!comment) {
+      this.ctx.throw(404, 'Comment Not Found');
+    }
+
+    // 校验评论作者是否是当前登录用户
+    if (!comment.user.equals(this.ctx.user._id)) {
+      this.ctx.throw(403);
+    }
+
+    // 删除评论
+    await comment.remove();
+    // 更新视频评论数量
+    video.commentsCount = await VideoComment.countDocuments({
+      video: videoId,
+    });
+    await video.save();
+
+    this.ctx.status = 204;
+  }
+
+  public async videoLike() {
+    const { Video, VideoLike } = this.app.model;
+    const { videoId } = this.ctx.params;
+    const userId = this.ctx.user._id;
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      this.ctx.throw(404);
+    }
+
+    const doc = await VideoLike.findOne({
+      user: userId,
+      video: videoId,
+    });
+
+    let isLiked = true;
+
+    if (doc && doc.like === 1) {
+      // 取消点赞
+      await doc.remove();
+      isLiked = false;
+    } else if (doc && doc.like === -1) {
+      doc.like = 1;
+      await doc.save();
+    } else {
+      await new VideoLike({
+        user: userId,
+        video: videoId,
+        like: 1,
+      }).save();
+    }
+
+    // 更新喜欢视频的数量
+    video.likesCount = await VideoLike.countDocuments({
+      video: videoId,
+      like: 1,
+    });
+
+    // 更新不喜欢视频的数量
+    video.dislikesCount = await VideoLike.countDocuments({
+      video: videoId,
+      like: -1,
+    });
+
+    await video.save();
+
+    this.ctx.body = {
+      video: {
+        ...video.toJSON(),
+        isLiked,
+      },
+    };
+  }
+
+  public async videoDislike() {
+    const { Video, VideoLike } = this.app.model;
+    const { videoId } = this.ctx.params;
+    const userId = this.ctx.user._id;
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      this.ctx.throw(404);
+    }
+
+    const doc = await VideoLike.findOne({
+      user: userId,
+      video: videoId,
+    });
+
+    let isDisliked = true;
+
+    if (doc && doc.like === -1) {
+      // 取消不喜欢
+      await doc.remove();
+      isDisliked = false;
+    } else if (doc && doc.like === 1) {
+      doc.like = -1;
+      await doc.save();
+    } else {
+      await new VideoLike({
+        user: userId,
+        video: videoId,
+        like: -1,
+      }).save();
+    }
+
+    // 更新喜欢视频的数量
+    video.likesCount = await VideoLike.countDocuments({
+      video: videoId,
+      like: 1,
+    });
+
+    // 更新不喜欢视频的数量
+    video.dislikesCount = await VideoLike.countDocuments({
+      video: videoId,
+      like: -1,
+    });
+
+    await video.save();
+
+    this.ctx.body = {
+      video: {
+        ...video.toJSON(),
+        isDisliked,
+      },
+    };
+
+  }
+
+  public async getVideoLikeList() {
+    const { Video, VideoLike } = this.app.model;
+    let { pageNum = 1, pageSize = 10 } = this.ctx.query;
+    pageNum = Number(pageNum);
+    pageSize = Number(pageSize);
+    const filterDoc = {
+      user: this.ctx.user._id,
+      like: 1,
+    };
+
+    const likes = await VideoLike
+      .find(filterDoc)
+      .sort({
+        createAt: -1,
+      })
+      .skip((pageNum - 1) * pageSize)
+      .limit(pageSize);
+
+    const getVideoList = Video
+      .find({
+        _id: {
+          $in: likes.map(item => item.video),
+        },
+      })
+      .populate('user');
+
+    const getTotalCount = Video.countDocuments();
+
+    const [ videoList, totalCount ] = await Promise.all([
+      getVideoList,
+      getTotalCount,
+    ]);
+
+    this.ctx.body = {
+      videoList,
+      totalCount,
+    };
   }
 
 }

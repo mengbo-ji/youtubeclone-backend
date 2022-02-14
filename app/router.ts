@@ -21,5 +21,10 @@ export default (app: Application) => {
     .get('/video/list', auth, controller.video.getVideoList) // 获取视频列表
     .get('/video/:userId/videoList', controller.video.getUserVideoList) // 获取用户发布的视频列表
     .get('/video/user/feed', auth, controller.video.getUserFeedVideoList) // 获取用户订阅的频道的视频列表
-    .post('/video/:videoId/update', auth, controller.video.videoUpdate); // 更新视频
+    .post('/video/:videoId/update', auth, controller.video.videoUpdate) // 更新视频
+    .post('/video/:videoId/cmoments/create', auth, controller.video.createVideoComment) // 添加视频评论
+    .post('/video/:videoId/cmoments/:commentId/delete', auth, controller.video.deleteVideoComment) // 删除视频评论
+    .post('/video/:videoId/like', auth, controller.video.videoLike) // 喜欢视频
+    .post('/video/:videoId/dislike', auth, controller.video.videoDislike) // 不喜欢视频
+    .get('/video/like/list', auth, controller.video.getVideoLikeList); // 喜欢视频列表
 };

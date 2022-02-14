@@ -29,5 +29,5 @@ export default (app: Application) => {
     },
   });
 
-  return mongoose.model('Comment', commentSchema);
+  return mongoose.model('VideoComment', commentSchema);
 };
