@@ -30,5 +30,5 @@ export default (app: Application) => {
     },
   });
 
-  return mongoose.model('Like', likeSchema);
+  return mongoose.model('VideoLike', likeSchema);
 };

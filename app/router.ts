@@ -16,5 +16,10 @@ export default (app: Application) => {
     .get('/user/:userId/subscribeList', controller.user.getUserSubscribeList) // 获取用户订阅列表
     .get('/vod/CreateUploadVideo', auth, controller.vod.createUploadVideo) // 获取视频上传地址和凭证
     .get('/vod/RefreshUploadVideo', auth, controller.vod.refreshUploadVideo) // 刷新视频上传凭证
-    .post('/video/create', auth, controller.video.create); // 创建视频
+    .post('/video/create', auth, controller.video.create) // 创建视频
+    .get('/video/:videoId/detail', middleware.auth({ required: false }), controller.video.detail) // 获取视频详
+    .get('/video/list', auth, controller.video.getVideoList) // 获取视频列表
+    .get('/video/:userId/videoList', controller.video.getUserVideoList) // 获取用户发布的视频列表
+    .get('/video/user/feed', auth, controller.video.getUserFeedVideoList) // 获取用户订阅的频道的视频列表
+    .post('/video/:videoId/update', auth, controller.video.videoUpdate); // 更新视频
 };
